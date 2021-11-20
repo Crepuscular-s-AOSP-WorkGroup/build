@@ -1162,6 +1162,14 @@ dont_bother_goals := out \
 # consistency with those defined in BoardConfig.mk files.
 include $(BUILD_SYSTEM)/android_soong_config_vars.mk
 
+ifneq ($(CUSTOM_BUILD),)
+ifneq ($(wildcard device/custom/sepolicy/common/sepolicy.mk),)
+## We need to be sure the global selinux policies are included
+## last, to avoid accidental resetting by device configs
+$(eval include device/custom/sepolicy/common/sepolicy.mk)
+endif
+endif
+
 ifeq ($(CALLED_FROM_SETUP),true)
 include $(BUILD_SYSTEM)/ninja_config.mk
 include $(BUILD_SYSTEM)/soong_config.mk
@@ -1172,17 +1180,10 @@ endif
 DEFAULT_DATA_OUT_MODULES := ltp $(ltp_packages) $(kselftest_modules)
 .KATI_READONLY := DEFAULT_DATA_OUT_MODULES
 
-# Make RECORD_ALL_DEPS readonly.
-RECORD_ALL_DEPS :=$= $(filter true,$(RECORD_ALL_DEPS))
-
-ifneq ($(CUSTOM_BUILD),)
-ifneq ($(wildcard device/custom/sepolicy/common/sepolicy.mk),)
-## We need to be sure the global selinux policies are included
-## last, to avoid accidental resetting by device configs
-endif
-endif
-
 # Include any vendor specific config.mk file
 -include vendor/*/build/core/config.mk
+
+# Make RECORD_ALL_DEPS readonly.
+RECORD_ALL_DEPS :=$= $(filter true,$(RECORD_ALL_DEPS))
 
 include $(BUILD_SYSTEM)/dumpvar.mk
